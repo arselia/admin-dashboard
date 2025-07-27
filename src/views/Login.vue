@@ -1,72 +1,71 @@
 <script setup>
-import { ref } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
 
-const router = useRouter();
-const email = ref('');
-const password = ref('');
-const error = ref('');
-const success = ref('');
-const loading = ref(false);
+const router = useRouter()
 
-// Menggunakan emits untuk memberi tahu komponen induk (App.vue) bahwa login berhasil
-const emit = defineEmits(['loginSuccess']);
+const email = ref('')
+const password = ref('')
+const error = ref('')
+const success = ref('')
+const loading = ref(false)
+
+const emit = defineEmits(['loginSuccess'])
 
 const handleLogin = async () => {
-  error.value = '';
-  success.value = '';
-  loading.value = true;
-  
-  try {
-    // 1. Request login
-    const response = await axios.post('https://api.escuelajs.co/api/v1/auth/login', {
-      email: email.value,
-      password: password.value,
-    });
+  error.value = ''
+  success.value = ''
+  loading.value = true
 
-    const accessToken = response.data.access_token;
-    const refreshToken = response.data.refresh_token;
-
-    // 2. Simpan token ke localStorage
-    localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
-
-    // 3. Ambil data profil pengguna (terautentikasi)
-    const profileResponse = await axios.get('https://api.escuelajs.co/api/v1/auth/profile', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    });
-
-    const user = profileResponse.data;
-
-    // 4. Simpan data user dan role ke localStorage
-    localStorage.setItem('user_profile', JSON.stringify(user));
-    localStorage.setItem('user_role', user.role); // bisa: 'customer' / 'admin'
-
-    // 5. Cek role sebelum redirect
-    if (user.role === 'admin') {
-      success.value = 'Login berhasil!';
-      emit('loginSuccess');
-      router.push('/dashboard');
-    } else {
-        error.value = 'Access denied. Admin only.';
-      // Hapus token dan user info jika bukan admin
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user_profile');
-      localStorage.removeItem('user_role');
-    }
-
-  } catch (err) {
-    console.error('Login error:', err.response?.data || err.message);
-    error.value = 'Login gagal. Email atau password salah.';
-  } finally {
-    loading.value = false;
+  if (!email.value || !password.value) {
+    error.value = 'Email dan password wajib diisi.'
+    loading.value = false
+    return
   }
-};
 
+  try {
+    // Request login
+    const { data } = await axios.post('https://api.escuelajs.co/api/v1/auth/login', {
+      email: email.value,
+      password: password.value
+    })
+
+    const accessToken = data.access_token
+    const refreshToken = data.refresh_token
+
+    // Simpan token ke localStorage
+    localStorage.setItem('access_token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
+
+    // Ambil profil pengguna
+    const profileRes = await axios.get('https://api.escuelajs.co/api/v1/auth/profile', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+
+    const user = profileRes.data
+    localStorage.setItem('user_profile', JSON.stringify(user))
+    localStorage.setItem('user_role', user.role)
+
+    // Cek role
+    if (user.role === 'admin') {
+      success.value = 'Login berhasil!'
+      emit('loginSuccess')
+      router.push('/dashboard')
+    } else {
+      error.value = 'Akses ditolak. Hanya admin yang diperbolehkan.'
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user_profile')
+      localStorage.removeItem('user_role')
+    }
+  } catch (err) {
+    console.error('Login error:', err.response?.data || err.message)
+    error.value = 'Login gagal. Email atau password salah.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>

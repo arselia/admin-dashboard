@@ -1,71 +1,3 @@
-<template>
-  <div class="dashboard-container">
-    <div class="dashboard-header">
-      <div class="header-content">
-        <h1 class="dashboard-title">Dashboard</h1>
-        <div class="user-info">
-          <div v-if="userProfile" class="user-card">
-            <div class="avatar">{{ userProfile.name?.charAt(0).toUpperCase() }}</div>
-            <div class="user-details">
-              <span class="user-name">{{ userProfile.name }}</span>
-              <span class="user-role">{{ userProfile.role || 'User' }}</span>
-            </div>
-          </div>
-          <div v-else class="loading-skeleton">
-            <div class="skeleton-avatar"></div>
-            <div class="skeleton-text"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dashboard-content">
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon products">📦</div>
-          <div class="stat-info">
-            <h3>{{ stats.totalProducts }}</h3>
-            <p>Total Products</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon categories">🏷️</div>
-          <div class="stat-info">
-            <h3>{{ stats.totalCategories }}</h3>
-            <p>Categories</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <h2 class="section-title">Quick Actions</h2>
-        <div class="actions-grid">
-          <router-link to="/products" class="action-card">
-            <div class="action-icon">📦</div>
-            <h3>Manage Products</h3>
-            <p>View, add, or edit products</p>
-          </router-link>
-          
-          <router-link to="/product/create" class="action-card">
-            <div class="action-icon">➕</div>
-            <h3>Add Product</h3>
-            <p>Create a new product</p>
-          </router-link>
-          
-          <div class="action-card logout-card" @click="handleLogout">
-            <div class="action-icon">🚪</div>
-            <h3>Logout</h3>
-            <p>Sign out of your account</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -101,20 +33,16 @@ const fetchUserProfile = async () => {
 
 const fetchStats = async () => {
   try {
-    // Fetch products count
     const productsRes = await axios.get('https://api.escuelajs.co/api/v1/products');
     stats.value.totalProducts = productsRes.data.length;
     
-    // Fetch categories count
     const categoriesRes = await axios.get('https://api.escuelajs.co/api/v1/categories');
     stats.value.totalCategories = categoriesRes.data.length;
     
-    // Fetch users count
     const usersRes = await axios.get('https://api.escuelajs.co/api/v1/users');
     stats.value.totalUsers = usersRes.data.length;
   } catch (err) {
     console.error('Failed to fetch stats:', err);
-    // Set default values if API fails
     stats.value = { totalProducts: 150, totalCategories: 8, totalUsers: 25 };
   }
 };
@@ -131,6 +59,42 @@ onMounted(() => {
   fetchStats();
 });
 </script>
+
+<template>
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <div class="header-content">
+        <h1 class="dashboard-title">Dashboard</h1>
+      </div>
+    </div>
+
+    <div class="dashboard-content">
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="actions-grid">
+          <router-link to="/products" class="action-card">
+            <div class="action-icon">📦</div>
+            <h3>Manage Products</h3>
+            <p>View, add, or edit products</p>
+          </router-link>
+          
+          <router-link to="/product/create" class="action-card">
+            <div class="action-icon">➕</div>
+            <h3>Add Product</h3>
+            <p>Create a new product</p>
+          </router-link>
+          
+          <div class="action-card logout-card" @click="handleLogout">
+            <div class="action-icon">🚪</div>
+            <h3>Logout</h3>
+            <p>Sign out of your account</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .dashboard-container {

@@ -1,3 +1,21 @@
+<script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.go(-1)
+  } else {
+    router.push('/')
+  }
+}
+
+const goToLogin = () => {
+  router.push('/')
+}
+</script>
+
 <template>
   <div class="unauthorized-container">
     <div class="unauthorized-card">
@@ -23,25 +41,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-
-const goBack = () => {
-  // Cek apakah ada history sebelumnya
-  if (window.history.length > 1) {
-    router.go(-1) // Kembali ke halaman sebelumnya
-  } else {
-    router.push('/') // Kalau tidak ada history, ke home
-  }
-}
-
-const goToLogin = () => {
-  router.push('/') // Arahkan ke halaman login
-}
-</script>
 
 <style scoped>
 .unauthorized-container {

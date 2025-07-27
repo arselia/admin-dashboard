@@ -1,53 +1,43 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-
 import { useRouter } from 'vue-router'
 const router = useRouter()
 
-const allProducts = ref([]) // Ini akan menyimpan semua produk dari API
+const allProducts = ref([])
 const offset = ref(0)
-const limit = 5 // sesuai requirement: 5 products per page
-const totalProducts = ref(0) // Ini akan jadi total produk setelah difilter
+const limit = 5
+const totalProducts = ref(0)
 const isLoading = ref(false)
 
-// filter states
 const title = ref('')
 const minPrice = ref('')
 const maxPrice = ref('')
 const categoryId = ref('')
 const categories = ref([])
 
-// Computed property untuk filtering data
 const filteredProducts = computed(() => {
   let tempProducts = allProducts.value;
 
-  // Filter berdasarkan judul
   if (title.value.trim()) {
     const searchTerm = title.value.trim().toLowerCase();
     tempProducts = tempProducts.filter(p => p.title.toLowerCase().includes(searchTerm));
   }
 
-  // Filter berdasarkan harga minimum
   if (minPrice.value && !isNaN(minPrice.value)) {
     tempProducts = tempProducts.filter(p => p.price >= parseFloat(minPrice.value));
   }
 
-  // Filter berdasarkan harga maksimum
   if (maxPrice.value && !isNaN(maxPrice.value)) {
     tempProducts = tempProducts.filter(p => p.price <= parseFloat(maxPrice.value));
   }
 
-  // Filter berdasarkan kategori
   if (categoryId.value) {
     tempProducts = tempProducts.filter(p => p.category?.id == categoryId.value);
   }
 
-  // Perbarui totalProducts berdasarkan hasil filter
   totalProducts.value = tempProducts.length;
 
-  // Reset offset jika halaman saat ini tidak lagi valid setelah filter
-  // Atau jika produk yang difilter lebih sedikit dari offset saat ini
   if (offset.value >= totalProducts.value && totalProducts.value > 0) {
     offset.value = Math.max(0, Math.floor((totalProducts.value - 1) / limit) * limit);
   } else if (totalProducts.value === 0) {
@@ -57,14 +47,12 @@ const filteredProducts = computed(() => {
   return tempProducts;
 });
 
-// Computed property untuk pagination data
 const paginatedProducts = computed(() => {
   const start = offset.value;
   const end = start + limit;
   return filteredProducts.value.slice(start, end);
 });
 
-// Computed properties untuk pagination logic (menggunakan totalProducts dari hasil filter)
 const currentPage = computed(() => Math.floor(offset.value / limit) + 1)
 const totalPages = computed(() => Math.ceil(totalProducts.value / limit))
 const isFirstPage = computed(() => offset.value === 0)
@@ -80,9 +68,7 @@ const confirmDelete = async (productId) => {
     try {
       await axios.delete(`https://api.escuelajs.co/api/v1/products/${productId}`)
       alert('Product deleted successfully.')
-      // Setelah delete, panggil ulang fetchAllProducts untuk memperbarui data
       await fetchAllProducts()
-      // Tidak perlu applyFilters lagi, karena fetchAllProducts akan memicu perubahan
     } catch (error) {
       console.error('Failed to delete product:', error)
       alert('Failed to delete product.')
@@ -90,17 +76,14 @@ const confirmDelete = async (productId) => {
   }
 }
 
-// Fungsi untuk mengambil SEMUA produk dari API (hanya sekali)
 const fetchAllProducts = async () => {
   if (isLoading.value) return
 
   isLoading.value = true
 
   try {
-    // Panggil API tanpa limit dan offset untuk mendapatkan semua data
     const response = await axios.get(`https://api.escuelajs.co/api/v1/products`)
     allProducts.value = response.data
-    // totalProducts akan otomatis diperbarui oleh filteredProducts computed property
     console.log(`Successfully fetched ${allProducts.value.length} total products for client-side processing.`);
   } catch (error) {
     console.error('Error fetching all products:', error)
@@ -111,7 +94,6 @@ const fetchAllProducts = async () => {
   }
 }
 
-// fetch category list
 const fetchCategories = async () => {
   try {
     const response = await axios.get('https://api.escuelajs.co/api/v1/categories')
@@ -121,17 +103,10 @@ const fetchCategories = async () => {
   }
 }
 
-// Apply filters - cukup mengubah offset jika diperlukan, filteredProducts akan otomatis re-evaluate
 const applyFilters = () => {
-  // Ketika filter diubah, kita reset offset ke 0 untuk menampilkan halaman pertama hasil filter
   offset.value = 0;
-  // Karena `filteredProducts` adalah computed property, perubahan pada `title`, `minPrice`, dll.
-  // akan secara otomatis memicu re-evaluasi `filteredProducts` dan `paginatedProducts`.
-  // Jadi tidak perlu memanggil fetchProducts() lagi di sini.
 }
 
-
-// pagination methods (menggeser offset)
 const nextPage = () => {
   if (!isLastPage.value && !isLoading.value) {
     offset.value += limit
@@ -148,28 +123,25 @@ const goToPage = (page) => {
   if (isLoading.value) return
 
   const newOffset = (page - 1) * limit
-  // Pastikan newOffset tidak melebihi batas maksimum
   if (newOffset >= 0 && newOffset < totalProducts.value) {
     offset.value = newOffset
-  } else if (totalProducts.value === 0 && page === 1) { // Case for empty results, go to page 1
+  } else if (totalProducts.value === 0 && page === 1) {
     offset.value = 0;
   }
 }
 
-// clear all filters
 const clearFilters = () => {
   title.value = ''
   minPrice.value = ''
   maxPrice.value = ''
   categoryId.value = ''
-  applyFilters() // applyFilters akan mereset offset ke 0
+  applyFilters()
 }
 
 onMounted(async () => {
   await fetchCategories()
-  await fetchAllProducts() // Panggil ini untuk mengambil semua data di awal
+  await fetchAllProducts()
 })
-
 </script>
 
 <template>
@@ -368,20 +340,6 @@ onMounted(async () => {
   </div>
 </template>
 
-<script>
-export default {
-  // Method ini sudah tidak relevan karena kita menggunakan computed properties
-  // dan pagination ditangani di sisi klien.
-  methods: {
-    getVisiblePages() {
-      // Logic ini sudah tidak digunakan.
-      // Anda bisa menghapus method ini atau membiarkannya kosong.
-      return [];
-    }
-  }
-}
-</script>
-
 <style scoped>
 /* Header */
 .header {
@@ -517,7 +475,6 @@ export default {
   text-overflow: ellipsis;
   display: inline-block;
 }
-
 
 /* Results Header */
 .results-header {

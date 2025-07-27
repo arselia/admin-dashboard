@@ -1,3 +1,18 @@
+<script setup>
+import { defineProps, watch } from 'vue'
+
+const props = defineProps({
+  isCollapsed: {
+    type: Boolean,
+    default: false
+  }
+})
+
+watch(() => props.isCollapsed, (newValue) => {
+  console.log('Sidebar received isCollapsed prop:', newValue)
+}, { immediate: true })
+</script>
+
 <template>
   <aside :class="['sidebar', { 'collapsed': isCollapsed }]">
     <div class="sidebar-header">
@@ -20,21 +35,6 @@
     </nav>
   </aside>
 </template>
-
-<script setup>
-import { defineProps, watch } from 'vue'
-
-const props = defineProps({
-  isCollapsed: {
-    type: Boolean,
-    default: false
-  }
-})
-
-watch(() => props.isCollapsed, (newValue) => {
-  console.log('Sidebar received isCollapsed prop:', newValue)
-}, { immediate: true })
-</script>
 
 <style scoped>
 .sidebar {

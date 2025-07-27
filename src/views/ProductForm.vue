@@ -17,7 +17,6 @@ const imageUrl = ref('')
 const categories = ref([])
 const fileInput = ref(null)
 
-
 const fetchCategories = async () => {
   const res = await axios.get('https://api.escuelajs.co/api/v1/categories')
   categories.value = res.data
@@ -27,101 +26,76 @@ const fetchProductById = async () => {
   try {
     const res = await axios.get(`https://api.escuelajs.co/api/v1/products/${productId}`)
     const product = res.data
-
     title.value = product.title
     price.value = product.price
     description.value = product.description
     categoryId.value = Number(product.category.id) 
     imageUrl.value = product.images[0]
   } catch (err) {
-    console.error('Unable to retrieve product data:', err)
+    console.error('Failed to fetch product:', err)
   }
 }
 
 const submitForm = async () => {
-
   if (!title.value || !price.value || !description.value || (!isEdit && !categoryId.value)) {
-    alert("Please fill all required fields.");
-    return;
-  }
-
-  if (!isEdit && !imageUrl.value) {
-    alert("Please upload a product image.");
-    return;
-  }
-
-  let confirmationMessage = isEdit
-    ? 'Are you sure to update this product?'
-    : 'Are you sure to create this product?'
-
-  if (!confirm(confirmationMessage)) {
-    // Jika pengguna menekan 'Cancel', hentikan proses submit
+    alert("Please fill all required fields.")
     return
   }
 
-  // Struktur data yang konsisten untuk create dan update
+  if (!isEdit && !imageUrl.value) {
+    alert("Please upload a product image.")
+    return
+  }
+
+  const confirmMsg = isEdit
+    ? 'Are you sure to update this product?'
+    : 'Are you sure to create this product?'
+
+  if (!confirm(confirmMsg)) return
+
   const productData = {
     title: title.value,
     price: Number(price.value),
     description: description.value,
-    images: [imageUrl.value],
+    images: [imageUrl.value]
   }
 
   try {
     if (isEdit) {
-      // Ambil data produk yang sudah ada untuk memastikan payload PUT lengkap
-      const existingProductRes = await axios.get(`https://api.escuelajs.co/api/v1/products/${productId}`);
-      const existingProduct = existingProductRes.data;
-
+      const existing = await axios.get(`https://api.escuelajs.co/api/v1/products/${productId}`)
       const updatePayload = {
-        title: productData.title,
-        price: productData.price,
-        description: productData.description,
-        // TETAP KIRIM categoryId LAMA, karena kita tidak bisa mengeditnya.
-        // Ini untuk API yang memerlukan payload PUT lengkap.
-        categoryId: existingProduct.category ? Number(existingProduct.category.id) : null,
+        ...productData,
+        categoryId: existing.data.category ? Number(existing.data.category.id) : null,
         images: productData.images.filter(Boolean).length > 0
-                  ? productData.images
-                  : (existingProduct.images && existingProduct.images.length > 0
-                      ? existingProduct.images
-                      : ["https://api.escuelajs.co/api/v1/files/default-placeholder.jpg"])
-      };
+          ? productData.images
+          : existing.data.images?.length
+            ? existing.data.images
+            : ["https://api.escuelajs.co/api/v1/files/default-placeholder.jpg"]
+      }
 
-      await axios.put(`https://api.escuelajs.co/api/v1/products/${productId}`, updatePayload);
-      alert('Product updated successfully!');
+      await axios.put(`https://api.escuelajs.co/api/v1/products/${productId}`, updatePayload)
+      alert('Product updated successfully!')
     } else {
-      // Untuk membuat produk baru, kirim productData yang sudah termasuk categoryId baru
-      productData.categoryId = Number(categoryId.value); // Pastikan categoryId ditambahkan untuk CREATE
-      await axios.post('https://api.escuelajs.co/api/v1/products', productData);
-      alert('Product created successfully!');
+      productData.categoryId = Number(categoryId.value)
+      await axios.post('https://api.escuelajs.co/api/v1/products', productData)
+      alert('Product created successfully!')
     }
 
     router.push('/products')
   } catch (err) {
-    console.error('Submit failed:', err)
-    console.error('Error response:', err.response?.data)
-    alert('Unable to save product data. Check console for details.')
+    console.error('Save failed:', err.response?.data || err.message)
+    alert('Unable to save product. See console for details.')
   }
 }
 
-const cancelForm = () => { // Mengubah nama fungsi untuk kejelasan
-  if (!confirm('Are you sure you want to cancel? Any unsaved changes will be discarded.')) {
-    return // Jika pengguna menekan 'Cancel', hentikan
+const cancelForm = () => {
+  if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+    router.push('/products')
   }
-  router.push('/products') // Langsung navigasi ke halaman daftar produk
 }
 
-
-onMounted(() => {
-  fetchCategories()
-  if (isEdit) {
-    fetchProductById()
-  }
-})
-
-// Fungsi untuk upload gambar
 const uploadImage = async () => {
-  if (!fileInput.value || !fileInput.value.files[0]) {
+  if (!fileInput.value?.files[0]) {
     alert('Select a file first.')
     return
   }
@@ -131,17 +105,20 @@ const uploadImage = async () => {
 
   try {
     const res = await axios.post('https://api.escuelajs.co/api/v1/files/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
     imageUrl.value = res.data.location
-    alert('Successfully uploaded! Image URL:\n' + imageUrl.value)
+    alert('Image uploaded successfully!')
   } catch (err) {
-    console.error('Failed to upload:', err.response?.data || err.message)
-    alert('Upload failed. Please check the console for more information.')
+    console.error('Upload failed:', err.response?.data || err.message)
+    alert('Image upload failed. See console for details.')
   }
 }
+
+onMounted(() => {
+  fetchCategories()
+  if (isEdit) fetchProductById()
+})
 </script>
 
 <template>
@@ -244,7 +221,6 @@ const uploadImage = async () => {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .container {
