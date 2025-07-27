@@ -1,5 +1,20 @@
-# Vue 3 + Vite
+# Technical Test - Frontend Developer Intern
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This project is a submission for the technical test of the Frontend Developer Intern position at PT Global Loyalty Indonesia (Alfagift).
+It is built using Vue.js and consumes public APIs from the Fake Store API by Platzi.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+# Features
+
+- Login form using JWT Auth
+- Static Dashboard Page
+- Sidebar navigation (Dashboard & Product)
+- Product Listing Page with:
+  - Pagination (5 products per page)
+  - Filter by title, price range, and category
+  - Add, Edit, and Delete product functionalities
+- Product Form Page:
+  - Create and update product
+  - Upload image
+- Form validation & confirmation popup
+  - Routing and navigation flow
+  - Confirmation dialogs on critical actions
