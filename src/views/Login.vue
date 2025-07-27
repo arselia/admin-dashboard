@@ -19,7 +19,6 @@ const handleLogin = async () => {
   loading.value = true
 
   if (!email.value || !password.value) {
-    error.value = 'Email dan password wajib diisi.'
     loading.value = false
     return
   }
@@ -49,11 +48,11 @@ const handleLogin = async () => {
 
     // Cek role
     if (user.role === 'admin') {
-      success.value = 'Login berhasil!'
+      success.value = 'You have successfully logged in!'
       emit('loginSuccess')
       router.push('/dashboard')
     } else {
-      error.value = 'Akses ditolak. Hanya admin yang diperbolehkan.'
+      error.value = 'Access denied. Only administrators are allowed.'
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('user_profile')
@@ -61,7 +60,7 @@ const handleLogin = async () => {
     }
   } catch (err) {
     console.error('Login error:', err.response?.data || err.message)
-    error.value = 'Login gagal. Email atau password salah.'
+    error.value = 'Failed to log in. Email or password is incorrect.'
   } finally {
     loading.value = false
   }
